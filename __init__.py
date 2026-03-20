@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import subprocess
+from pathlib import Path
 
 from aqt import dialogs, gui_hooks, mw, qconnect
 from aqt.qt import (
@@ -248,8 +249,7 @@ def _paste_into_chatgpt_app() -> None:
         return
     script = (
         'tell application "ChatGPT" to activate\n'
-        'tell application "System Events" to keystroke "v" using {command down}\n'
-        'tell application "System Events" to key code 36'
+        'tell application "System Events" to keystroke "v" using {command down}'
     )
     try:
         subprocess.run(
@@ -265,6 +265,26 @@ def _paste_into_chatgpt_app() -> None:
 def _focus_and_paste_chatgpt() -> None:
     _focus_chatgpt_app()
     _paste_into_chatgpt_app()
+    if sys.platform == "darwin":
+        QTimer.singleShot(200, _press_enter_in_chatgpt)
+
+
+def _press_enter_in_chatgpt() -> None:
+    if sys.platform != "darwin":
+        return
+    script = (
+        'tell application "ChatGPT" to activate\n'
+        'tell application "System Events" to key code 36'
+    )
+    try:
+        subprocess.run(
+            ["/usr/bin/osascript", "-e", script],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        pass
 
 
 def wait_for_clipboard_change(old_text: str) -> None:

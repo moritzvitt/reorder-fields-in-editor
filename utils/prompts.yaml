@@ -13,6 +13,10 @@ prompt_template: |-
   ———**Grammar, Structure**
   Explain only the structure and grammar directly related to {lemma} in {subtitle}.
 
+
+
+
+
 batch_instructions: |-
   For each card:
   - Keep the identifier EXACTLY as given
