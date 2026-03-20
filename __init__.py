@@ -18,6 +18,7 @@ from aqt.qt import (
     Qt,
 )
 from aqt.utils import askUser, showInfo, tooltip
+from anki.utils import strip_html
 
 from .utils.chatgpt_helper import (
     build_batch_prompt,
@@ -181,6 +182,8 @@ def _current_browser():
     dialog = dialogs._dialogs.get("Browser")
     if not dialog:
         return None
+    if isinstance(dialog, type):
+        return None
     if isinstance(dialog, list):
         for candidate in reversed(dialog):
             if candidate is not None:
@@ -193,16 +196,30 @@ def _current_browser():
 
 
 def _browser_selected_note_ids(browser) -> list[int]:
+    if browser is None or isinstance(browser, type):
+        return []
     if hasattr(browser, "selected_notes"):
-        return list(browser.selected_notes())
+        try:
+            return list(browser.selected_notes())
+        except (TypeError, RuntimeError):
+            return []
     if hasattr(browser, "selectedNotes"):
-        return list(browser.selectedNotes())
+        try:
+            return list(browser.selectedNotes())
+        except (TypeError, RuntimeError):
+            return []
     if hasattr(browser, "selected_cards"):
-        card_ids = browser.selected_cards()
-        return list({mw.col.get_card(cid).note_id for cid in card_ids})
+        try:
+            card_ids = browser.selected_cards()
+            return list({mw.col.get_card(cid).note_id for cid in card_ids})
+        except (TypeError, RuntimeError):
+            return []
     if hasattr(browser, "selectedCards"):
-        card_ids = browser.selectedCards()
-        return list({mw.col.get_card(cid).note_id for cid in card_ids})
+        try:
+            card_ids = browser.selectedCards()
+            return list({mw.col.get_card(cid).note_id for cid in card_ids})
+        except (TypeError, RuntimeError):
+            return []
     return []
 
 
@@ -358,7 +375,11 @@ def _refresh_browser_note(note) -> None:
     try:
         editor = getattr(browser, "editor", None)
         current = getattr(editor, "note", None) if editor is not None else None
-        if current is not None and getattr(current, "id", None) == note_id:
+        if (
+            current is not None
+            and getattr(current, "id", None) == note_id
+            and hasattr(editor, "tags")
+        ):
             if hasattr(editor, "set_note"):
                 editor.set_note(note)
             elif hasattr(editor, "setNote"):
@@ -400,13 +421,55 @@ def _handle_chatgpt_response(text: str) -> None:
             return
         for nid, content in mapping.items():
             note = mw.col.get_note(nid)
-            write_to_field(note, grammar_field, content)
+            write_to_field(note, grammar_field, _normalize_response_text(content))
         tooltip(f"ChatGPT Helper: Updated {len(mapping)} notes.")
         return
 
     note = mw.col.get_note(note_ids[0])
-    write_to_field(note, grammar_field, text)
+    write_to_field(note, grammar_field, _normalize_response_text(text))
     tooltip("ChatGPT Helper: Updated 1 note.")
+
+
+def _normalize_response_text(text: str) -> str:
+    raw = text or ""
+    if raw.lstrip().startswith("{\\rtf"):
+        raw = strip_html(raw)
+    has_html = "<" in raw and ">" in raw
+    if has_html and "<div" in raw:
+        return _trim_blank_divs(raw.strip())
+    if has_html:
+        # Preserve basic formatting by converting paragraphs to divs.
+        converted = (
+            raw.replace("<p>", "<div>")
+            .replace("</p>", "</div>")
+            .replace("<p ", "<div ")
+        )
+        return _trim_blank_divs(converted.strip())
+    if has_html:
+        raw = strip_html(raw)
+    normalized = raw.replace("\r\n", "\n").replace("\r", "\n")
+    while "\n\n\n" in normalized:
+        normalized = normalized.replace("\n\n\n", "\n\n")
+    lines = normalized.split("\n")
+    html_lines = []
+    for line in lines:
+        if line.strip() == "":
+            html_lines.append("<div><br></div>")
+        else:
+            html_lines.append(f"<div>{line}</div>")
+    return _trim_blank_divs("\n".join(html_lines).strip())
+
+
+def _trim_blank_divs(html: str) -> str:
+    lines = [line for line in html.splitlines()]
+    def is_blank_div(line: str) -> bool:
+        stripped = line.strip().lower()
+        return stripped in ("<div><br></div>", "<div><br/></div>", "<div><br /></div>")
+    while lines and is_blank_div(lines[0]):
+        lines.pop(0)
+    while lines and is_blank_div(lines[-1]):
+        lines.pop()
+    return "\n".join(lines).strip()
 
 
 def _chatgpt_required_fields(config: dict[str, str]) -> dict[str, str]:
@@ -474,6 +537,7 @@ def _run_chatgpt_helper() -> None:
             lemma_field=fields["lemma"],
             subtitle_field=fields["subtitle"],
             question_field=fields["question"],
+            target_field=fields["grammar"],
         )
     else:
         prompt, note_ids = build_batch_prompt(
@@ -481,6 +545,7 @@ def _run_chatgpt_helper() -> None:
             lemma_field=fields["lemma"],
             subtitle_field=fields["subtitle"],
             question_field=fields["question"],
+            target_field=fields["grammar"],
         )
 
     copy_to_clipboard(prompt)
@@ -493,6 +558,113 @@ def _run_chatgpt_helper() -> None:
     }
     wait_for_clipboard_change(prompt)
     tooltip("ChatGPT Helper: Prompt copied. Waiting for clipboard response.")
+
+
+def _run_chatgpt_helper_from_editor(editor) -> None:
+    global _CHATGPT_PENDING, _CHATGPT_WAIT_TIMER
+    editor_obj = _unwrap_editor(editor)
+    note = _resolve_editor_note(editor_obj)
+    if note is None or not getattr(note, "id", None):
+        showInfo("ChatGPT Helper: No note selected.")
+        return
+    field_index = getattr(editor_obj, "currentField", None)
+    if callable(field_index):
+        try:
+            field_index = field_index()
+        except Exception:
+            field_index = None
+    if field_index is None or field_index < 0:
+        field_index = getattr(editor_obj, "last_field_index", None)
+    if field_index is None or field_index < 0:
+        field_index = getattr(editor_obj, "currentFieldIndex", None)
+        if callable(field_index):
+            try:
+                field_index = field_index()
+            except Exception:
+                field_index = None
+    if field_index is None or field_index < 0:
+        field_index = getattr(editor_obj, "_currentField", None)
+    if field_index is None or field_index < 0:
+        try:
+            total_fields = len(note.fields)
+        except Exception:
+            total_fields = 0
+        if total_fields == 1:
+            field_index = 0
+    if field_index is None or field_index < 0:
+        showInfo("ChatGPT Helper: No field selected.")
+        return
+    try:
+        field_name = note.model()["flds"][field_index]["name"]
+    except Exception:
+        showInfo("ChatGPT Helper: Failed to resolve field name.")
+        return
+    config = _get_addon_config()
+    fields = _chatgpt_required_fields(config)
+    required = [fields["lemma"], fields["subtitle"]]
+    if fields["question"]:
+        required.append(fields["question"])
+    if any(field not in note for field in required):
+        showInfo("ChatGPT Helper: Missing required fields in selected note.")
+        return
+    if _CHATGPT_WAIT_TIMER is not None and _CHATGPT_WAIT_TIMER.isActive():
+        if not askUser(
+            "ChatGPT Helper is already waiting for clipboard change. Cancel and restart?"
+        ):
+            return
+        _CHATGPT_WAIT_TIMER.stop()
+        _CHATGPT_PENDING = None
+        _CHATGPT_WAIT_TIMER = None
+    prompt = build_prompt_for_note(
+        note,
+        lemma_field=fields["lemma"],
+        subtitle_field=fields["subtitle"],
+        question_field=fields["question"],
+        target_field=field_name,
+    )
+    copy_to_clipboard(prompt)
+    if sys.platform == "darwin":
+        QTimer.singleShot(300, _focus_and_paste_chatgpt)
+    _CHATGPT_PENDING = {
+        "mode": CHATGPT_MODE_SINGLE,
+        "note_ids": [int(note.id)],
+        "grammar_field": field_name,
+    }
+    wait_for_clipboard_change(prompt)
+    tooltip("ChatGPT Helper: Prompt copied. Waiting for clipboard response.")
+
+
+def _unwrap_editor(editor):
+    return getattr(editor, "editor", editor)
+
+
+def _resolve_editor_note(editor):
+    note = getattr(editor, "note", None)
+    if callable(note):
+        try:
+            note = note()
+        except Exception:
+            note = None
+    if note is None and hasattr(editor, "currentNote"):
+        try:
+            note = editor.currentNote()
+        except Exception:
+            note = None
+    if note is not None and getattr(note, "id", None):
+        return note
+    browser = _current_browser()
+    if browser is not None:
+        note_ids = _browser_selected_note_ids(browser)
+        if note_ids:
+            return mw.col.get_note(note_ids[0])
+    reviewer = getattr(mw, "reviewer", None)
+    card = getattr(reviewer, "card", None) if reviewer is not None else None
+    if card is not None:
+        try:
+            return card.note()
+        except Exception:
+            return None
+    return None
 
 
 def _set_chatgpt_mode(mode: str) -> None:
@@ -526,6 +698,12 @@ def _add_chatgpt_menu() -> None:
     mw.form.menuTools.addMenu(menu)
 
 
+def _on_editor_context_menu(editor, menu) -> None:
+    action = QAction("Ask ChatGPT", menu)
+    qconnect(action.triggered, lambda _checked=False, e=editor: _run_chatgpt_helper_from_editor(e))
+    menu.addAction(action)
+
+
 action = QAction("Prompt Addon Configuration", mw)
 qconnect(action.triggered, _run_open_config)
 mw.form.menuTools.addAction(action)
@@ -537,3 +715,5 @@ if hasattr(gui_hooks, "browser_menus"):
     gui_hooks.browser_menus.append(_register_browser_instance)
 elif hasattr(gui_hooks, "browser_will_show"):
     gui_hooks.browser_will_show.append(_register_browser_instance)
+if hasattr(gui_hooks, "editor_will_show_context_menu"):
+    gui_hooks.editor_will_show_context_menu.append(_on_editor_context_menu)

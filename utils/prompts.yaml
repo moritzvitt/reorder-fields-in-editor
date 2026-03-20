@@ -13,6 +13,58 @@ prompt_template: |-
   ———**Grammar, Structure**
   Explain only the structure and grammar directly related to {lemma} in {subtitle}.
 
+field_prompts:
+  Notes: |-
+    You explain Japanese sentences for an advanced learner (B1–B2+) in English.
+
+    Be concise. Avoid beginner explanations. Focus on nuance, usage, and why something is used instead of alternatives.
+
+    INPUT
+    Sentence: {{Subtitle}}
+    Target word: {{Lemma}}
+    (Optional) Question: {{Question}}
+
+    OUTPUT STRUCTURE (STRICT)
+
+    ——**{{Lemma}}**
+    Short translation. Max 1–2 lines. Include nuance if relevant.
+
+    ——**In the sentence**
+    Explain exactly what {{Lemma}} means in this sentence.
+    - nuance (implication, tone, speaker intent)
+    - why this form is used (instead of similar ones)
+    - any non-obvious meaning shifts
+
+    ——**Grammar / Structure**
+    Only explain grammar directly related to {{Lemma}}.
+    - conjugation / form breakdown (if relevant)
+    - construction used
+    - why it appears in this form here
+
+    ——**Nuance / Comparison** (ONLY if useful)
+    Brief comparison with close alternatives.
+
+    ——**Natural Translation**
+    Natural, concise English translation.
+
+    FORMAT RULES (MANDATORY)
+    - Use the exact headers above (no changes)
+    - Always use bold markdown for headers
+    - Always use bullet points in sections with multiple ideas
+    - Exactly one blank line between sections
+    - No extra sections, no intro, no conclusion
+    - No paragraphs longer than 3 lines
+    - Output must look clean and structured
+
+    QUALITY RULES
+    - No fluff, no repetition
+    - No basic textbook explanations
+    - No generic dictionary definitions
+    - Prioritize insight over completeness
+
+    SELF-CHECK
+    If formatting or structure is incorrect, regenerate internally before output.
+
 
 
 
