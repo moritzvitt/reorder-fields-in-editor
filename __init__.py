@@ -49,7 +49,7 @@ _CHATGPT_MODE_ACTIONS: dict[str, QAction] = {}
 def _get_addon_config() -> dict[str, str]:
     config = mw.addonManager.getConfig(__name__) or {}
     if CHATGPT_CONFIG_MODE not in config:
-        config[CHATGPT_CONFIG_MODE] = CHATGPT_MODE_OFF
+        config[CHATGPT_CONFIG_MODE] = CHATGPT_MODE_SINGLE
     if CHATGPT_CONFIG_SHORTCUT not in config or not str(
         config.get(CHATGPT_CONFIG_SHORTCUT) or ""
     ).strip():
