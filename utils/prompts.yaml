@@ -1,41 +1,25 @@
 prompt_template: |-
-  You explain Japanese sentences for an advanced learner in English!
-  Be very concise! (Maximum of 6 lines!)
-
-  OUTPUT STRUCTURE
-
-  [List difficult words in the sentence with furigana and short meaning.]
-  Example format:
+  Gib mir eine Liste der schwierigen Wörter in diesem Satz: "{Subtitle}".
 
   戦闘機[せんとうき] — fighter jet
   願[ねが]い — Wish, please
 
-  ———**Grammar, Structure**
-  Explain only the structure and grammar directly related to {lemma} in {subtitle}.
+  Erkläre die Grammatik in dem Satz: "{Subtitle}" auf deutsch.
+  Gib 4 weitere Beispiele, wenn nötig. Vermeide unnötige Details oder Erklärungen auf Anfängerniveau.
 
 field_prompts:
   Notes: |-
-    You explain Japanese sentences for an advanced learner (B1–B2+) in English.
-
-    Be concise. Avoid beginner explanations. Focus on nuance, usage, and why something is used instead of alternatives.
-    
-    Explain {Lemma} in {Subtitle}. 
-    If there is a question answer it explicitly. Question:{question}
+    Erkläre den Satz: "{Subtitle}" auf deutsch.
+    Gib 4 weitere Beispiele, wenn nötig. Vermeide unnötige Details oder Erklärungen auf Anfängerniveau.
 
   Japanese Notes: |-
-    日本語学習者向けに、やさしい日本語で説明してください。
-
-    入力
-    文: {{Subtitle}}
-    対象語: {{Lemma}}
-    (任意) 質問: {{Question}}
-
+    「文「{Subtitle}」を説明してください。特に{Lemma}に注目してください。日本語で答えて下さい。
+    必要であれば、追加の例も示してください。初心者向けの余計な説明は避けてください。」
+    
     出力
     - わかりやすい短い説明
     - 難しい言葉は使わない
-    - 必要なら例文を1つ
-
-
+    - 必要なら例文を4つ
 
 
 
