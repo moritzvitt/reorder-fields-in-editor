@@ -152,6 +152,12 @@ def _render_prompt_variables(
         template.replace("{{Lemma}}", lemma)
         .replace("{{Subtitle}}", subtitle)
         .replace("{{Question}}", question)
+        .replace("{Lemma}", lemma)
+        .replace("{Subtitle}", subtitle)
+        .replace("{Question}", question)
+        .replace("{lemma}", lemma)
+        .replace("{subtitle}", subtitle)
+        .replace("{question}", question)
     )
 
 
@@ -180,14 +186,21 @@ def build_single_prompt(
         subtitle=subtitle_text,
         question=question_text,
     )
-    try:
-        prompt = prompt.format(lemma=lemma_text, subtitle=subtitle_text)
-    except Exception:
-        pass
     q = _normalize_text(question)
     if q:
-        prompt = f"{prompt}\nIf a question exists, answer it explicitly: {q}"
+        if not _template_has_question_placeholder(prompt):
+            prompt = f"{prompt}\nIf a question exists, answer it explicitly: {q}"
     return prompt
+
+
+def _template_has_question_placeholder(template: str) -> bool:
+    candidates = (
+        "{{Question}}",
+        "{Question}",
+        "{question}",
+        "{{question}}",
+    )
+    return any(token in template for token in candidates)
 
 
 def build_prompt_for_note(

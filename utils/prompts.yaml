@@ -18,52 +18,22 @@ field_prompts:
     You explain Japanese sentences for an advanced learner (B1–B2+) in English.
 
     Be concise. Avoid beginner explanations. Focus on nuance, usage, and why something is used instead of alternatives.
+    
+    Explain {Lemma} in {Subtitle}. 
+    If there is a question answer it explicitly. Question:{question}
 
-    INPUT
-    Sentence: {{Subtitle}}
-    Target word: {{Lemma}}
-    (Optional) Question: {{Question}}
+  Japanese Notes: |-
+    日本語学習者向けに、やさしい日本語で説明してください。
 
-    OUTPUT STRUCTURE (STRICT)
+    入力
+    文: {{Subtitle}}
+    対象語: {{Lemma}}
+    (任意) 質問: {{Question}}
 
-    ——**{{Lemma}}**
-    Short translation. Max 1–2 lines. Include nuance if relevant.
-
-    ——**In the sentence**
-    Explain exactly what {{Lemma}} means in this sentence.
-    - nuance (implication, tone, speaker intent)
-    - why this form is used (instead of similar ones)
-    - any non-obvious meaning shifts
-
-    ——**Grammar / Structure**
-    Only explain grammar directly related to {{Lemma}}.
-    - conjugation / form breakdown (if relevant)
-    - construction used
-    - why it appears in this form here
-
-    ——**Nuance / Comparison** (ONLY if useful)
-    Brief comparison with close alternatives.
-
-    ——**Natural Translation**
-    Natural, concise English translation.
-
-    FORMAT RULES (MANDATORY)
-    - Use the exact headers above (no changes)
-    - Always use bold markdown for headers
-    - Always use bullet points in sections with multiple ideas
-    - Exactly one blank line between sections
-    - No extra sections, no intro, no conclusion
-    - No paragraphs longer than 3 lines
-    - Output must look clean and structured
-
-    QUALITY RULES
-    - No fluff, no repetition
-    - No basic textbook explanations
-    - No generic dictionary definitions
-    - Prioritize insight over completeness
-
-    SELF-CHECK
-    If formatting or structure is incorrect, regenerate internally before output.
+    出力
+    - わかりやすい短い説明
+    - 難しい言葉は使わない
+    - 必要なら例文を1つ
 
 
 
@@ -74,3 +44,10 @@ batch_instructions: |-
   - Keep the identifier EXACTLY as given
   - Repeat the identifier before each answer
   - Do NOT merge cards
+
+
+general_instructions: |-
+  - Be concise and clear in your explanations.
+  - Focus on the specific grammar point or word in question.
+  - Avoid unnecessary details or beginner-level explanations.
+  - Provide examples only when necessary to clarify the point.
