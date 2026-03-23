@@ -4,7 +4,7 @@ from aqt import gui_hooks, mw, qconnect
 from aqt.qt import QAction
 
 from .browser_utils import register_browser_instance
-from .field_visibility import apply_field_visibility
+from .field_visibility import apply_field_visibility, editor_will_load_note
 from .flow import on_editor_did_focus_field
 from .ui import add_chatgpt_menu, on_editor_context_menu, refresh_chatgpt_shortcut, run_open_config
 
@@ -26,3 +26,5 @@ if hasattr(gui_hooks, "editor_did_focus_field"):
     gui_hooks.editor_did_focus_field.append(on_editor_did_focus_field)
 if hasattr(gui_hooks, "editor_did_load_note"):
     gui_hooks.editor_did_load_note.append(apply_field_visibility)
+if hasattr(gui_hooks, "editor_will_load_note"):
+    gui_hooks.editor_will_load_note.append(editor_will_load_note)
