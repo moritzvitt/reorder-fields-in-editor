@@ -124,34 +124,48 @@ def refresh_browser_note(note) -> None:
         pass
 
 
+def refresh_other_editors(note) -> None:
+    note_id = getattr(note, "id", None)
+    if not note_id:
+        return
+    editors = []
+    main_editor = getattr(mw, "editor", None)
+    if main_editor is not None:
+        editors.append(main_editor)
+    add_dialog = dialogs._dialogs.get("AddCards")
+    if isinstance(add_dialog, tuple):
+        add_dialog = add_dialog[1] if add_dialog[1] is not None else add_dialog[0]
+    if add_dialog is not None and hasattr(add_dialog, "editor"):
+        editors.append(add_dialog.editor)
+    reviewer = getattr(mw, "reviewer", None)
+    if reviewer is not None:
+        for attr in ("editor", "_editor"):
+            ed = getattr(reviewer, attr, None)
+            if ed is not None:
+                editors.append(ed)
+    edit_current = dialogs._dialogs.get("EditCurrent")
+    if isinstance(edit_current, tuple):
+        edit_current = edit_current[1] if edit_current[1] is not None else edit_current[0]
+    if edit_current is not None and hasattr(edit_current, "editor"):
+        editors.append(edit_current.editor)
+    for editor in editors:
+        try:
+            current = getattr(editor, "note", None)
+            if callable(current):
+                current = current()
+            if current is None or getattr(current, "id", None) != note_id:
+                continue
+            if not hasattr(editor, "tags"):
+                continue
+            if hasattr(editor, "set_note"):
+                editor.set_note(note)
+            elif hasattr(editor, "setNote"):
+                editor.setNote(note)
+            else:
+                editor.loadNote()
+        except Exception:
+            continue
+
+
 def unwrap_editor(editor):
     return getattr(editor, "editor", editor)
-
-
-def resolve_editor_note(editor):
-    note = getattr(editor, "note", None)
-    if callable(note):
-        try:
-            note = note()
-        except Exception:
-            note = None
-    if note is None and hasattr(editor, "currentNote"):
-        try:
-            note = editor.currentNote()
-        except Exception:
-            note = None
-    if note is not None and getattr(note, "id", None):
-        return note
-    browser = current_browser()
-    if browser is not None:
-        note_ids = browser_selected_note_ids(browser)
-        if note_ids:
-            return mw.col.get_note(note_ids[0])
-    reviewer = getattr(mw, "reviewer", None)
-    card = getattr(reviewer, "card", None) if reviewer is not None else None
-    if card is not None:
-        try:
-            return card.note()
-        except Exception:
-            return None
-    return None

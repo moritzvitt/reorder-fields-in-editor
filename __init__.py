@@ -4,6 +4,7 @@ from aqt import gui_hooks, mw, qconnect
 from aqt.qt import QAction
 
 from .browser_utils import register_browser_instance
+from .flow import on_editor_did_focus_field
 from .ui import add_chatgpt_menu, on_editor_context_menu, refresh_chatgpt_shortcut, run_open_config
 
 
@@ -20,3 +21,5 @@ elif hasattr(gui_hooks, "browser_will_show"):
     gui_hooks.browser_will_show.append(register_browser_instance)
 if hasattr(gui_hooks, "editor_will_show_context_menu"):
     gui_hooks.editor_will_show_context_menu.append(on_editor_context_menu)
+if hasattr(gui_hooks, "editor_did_focus_field"):
+    gui_hooks.editor_did_focus_field.append(on_editor_did_focus_field)
