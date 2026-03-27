@@ -91,17 +91,17 @@ Open question:
 
 - what is the most practical testing strategy for this add-on: more structured manual test docs, lightweight regression checks, or some form of UI-driven testing?
 
-## 7. Future Layout Rotation
+## 7. Multi-Layout Design Follow-Up
 
-A planned feature is a button that rotates through multiple field layouts for the same note type.
+The add-on now supports multiple field layouts for a note type and a toolbar button that rotates through them.
 
-That will require more than the current single visible-field subset model.
+The next questions are about scaling that cleanly.
 
 Open questions:
 
-- how should multiple layouts be stored in config?
-- how should the active layout be remembered?
-- should layout rotation be per note type, per session, or persisted globally?
+- how should more than a few layouts be represented in config without becoming hard to edit?
+- should layouts have names instead of only an index like `Layout 2/3`?
+- should layout switching stay per note type only, or also vary by editor context?
 
 ## Best Places To Contribute
 
@@ -110,4 +110,4 @@ The highest-value contribution areas right now are:
 1. making toggle behavior more reliable
 2. simplifying the visibility lifecycle
 3. improving version robustness
-4. designing the future multi-layout feature
+4. refining the multi-layout feature

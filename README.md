@@ -7,6 +7,7 @@ An Anki add-on for the Browser editor that hides non-relevant note fields based 
 - shows only the configured subset of fields for a note type
 - adds a toggle button to temporarily show all fields
 - lets the user hide non-allowed fields again on the next click
+- adds a layout button that rotates through the available field subsets for the current note type
 
 ## Main Files
 
@@ -24,8 +25,8 @@ The main hard parts are:
 
 ## Future Plans
 
-- rotate through multiple field layouts for the same note type
-- support multiple visibility presets per note type
+- support more than the initial three layouts per note type
+- make layout names and layout editing easier
 
 ## Docs
 

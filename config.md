@@ -4,16 +4,37 @@ This add-on stores its configuration as a JSON dictionary.
 
 ## Keys
 
-### `field_visibility_map`
+### `field_visibility_layouts`
 
-Maps note type names to the list of fields that should remain visible.
+Maps note type names to one or more field layouts.
 
 Example:
 
 ```json
 {
-  "Basic": ["Front", "Back"],
-  "Cloze": ["Text", "Extra"]
+  "Basic": [
+    ["Front", "Back"],
+    ["Front"]
+  ],
+  "Cloze": [
+    ["Text", "Extra"],
+    ["Text"]
+  ]
+}
+```
+
+Each inner list is one layout. The layout button rotates through the available layouts for the current note type.
+
+### `field_visibility_active_layouts`
+
+Stores the currently selected layout index for each note type.
+
+Example:
+
+```json
+{
+  "Basic": 0,
+  "Cloze": 1
 }
 ```
 

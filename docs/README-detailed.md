@@ -27,32 +27,45 @@ Alternatively, you can install it directly from Anki by entering the addon code 
 1. Open Anki's add-on config for this add-on
 2. Configure which fields should be visible for each note type
 3. When editing notes, only the configured fields will be visible
-4. Use the **"Hide Fields"** button in the editor to temporarily show all fields
+4. Use the **"Layout"** button in the editor to rotate through the configured field subsets
+5. Use the **"Show Fields"** button in the editor to temporarily show all fields
 
 ### Toggle Button
 
-- **"Hide Fields"**: Hides fields according to your configuration
 - **"Show Fields"**: Temporarily shows all fields for the current note type
+- **"Hide Fields"**: Re-enables field hiding for the current note type
 - The toggle state is remembered per note type
+
+### Layout Button
+
+- **"Layout 1/3"**: Shows the first configured field subset for the current note type
+- Clicking the button rotates through the available layouts
+- The current layout index is remembered per note type
 
 ## Configuration
 
 The configuration is done through Anki's native add-on config system with [`config.json`](../config.json) providing the defaults and [`config.md`](../config.md) documenting the keys.
 
-### Field Visibility Map
+### Field Visibility Layouts
 
 The main configuration is a JSON object where:
 
 - **Keys**: Note type names such as `Basic`, `Cloze`, or `Moritz Language Reactor`
-- **Values**: Arrays of field names that should remain visible
+- **Values**: Arrays of layouts, where each layout is a list of field names that should remain visible
 
 Example:
 
 ```json
 {
-  "Basic": ["Front", "Back"],
-  "Cloze": ["Text", "Extra"],
-  "Moritz Language Reactor": ["Lemma", "Cloze", "Synonyms", "Japanese Notes"]
+  "Basic": [
+    ["Front", "Back"],
+    ["Front"]
+  ],
+  "Moritz Language Reactor": [
+    ["Lemma", "Cloze", "Synonyms", "Japanese Notes"],
+    ["Cloze"],
+    ["Cloze", "Lemma"]
+  ]
 }
 ```
 
@@ -60,15 +73,19 @@ Default:
 
 ```json
 {
-  "Moritz Language Reactor": ["Lemma", "Cloze", "Synonyms", "Japanese Notes"]
+  "Moritz Language Reactor": [
+    ["Lemma", "Cloze", "Synonyms", "Japanese Notes"],
+    ["Cloze"],
+    ["Cloze", "Lemma"]
+  ]
 }
 ```
 
 ### How It Works
 
 - When you open a note for editing, the add-on checks the note type
-- It looks up the allowed fields for that note type in your configuration
-- Fields not in the allowed list are hidden in the editor
+- It looks up the available layouts for that note type in your configuration
+- The active layout determines which fields remain visible
 - The toggle button allows you to temporarily override this behavior
 
 ## Advanced Features
@@ -83,8 +100,8 @@ For troubleshooting, the add-on can generate debug information about field detec
 
 ## Planned Features
 
-- **Layout Rotation Button**: Add a button that rotates through multiple predefined field layouts for the current note type
-- **Multiple Visibility Presets**: Allow one note type to define several subsets of visible fields instead of just one
+- **More Layout Presets**: Allow one note type to define more than the initial three subsets of visible fields
+- **Named Layouts**: Support human-readable layout names instead of just numbered rotation
 - **Faster Note Inspection**: Make it easier to switch between different editing contexts without opening the full field list every time
 
 ## Compatibility
