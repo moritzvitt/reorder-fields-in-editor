@@ -16,8 +16,8 @@ action = QAction("Editor Focus Mode Configuration", mw)
 qconnect(action.triggered, run_open_config)
 mw.form.menuTools.addAction(action)
 
-if hasattr(gui_hooks, "browser_menus"):
-    gui_hooks.browser_menus.append(register_browser_instance)
+if hasattr(gui_hooks, "browser_menus_did_init"):
+    gui_hooks.browser_menus_did_init.append(register_browser_instance)
 elif hasattr(gui_hooks, "browser_will_show"):
     gui_hooks.browser_will_show.append(register_browser_instance)
 if hasattr(gui_hooks, "editor_did_load_note"):
