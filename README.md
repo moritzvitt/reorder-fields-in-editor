@@ -11,7 +11,7 @@ An Anki add-on for the Browser editor that hides non-relevant note fields based 
 
 ## Demo
 
-- [Demo video](./docs/assets/Screen%20Recording%202026-03-27%20at%2014.25.20.mov)
+[![Watch the demo on YouTube](https://img.youtube.com/vi/6XNraKFZiZc/hqdefault.jpg)](https://youtu.be/6XNraKFZiZc)
 
 ## Main Files
 
