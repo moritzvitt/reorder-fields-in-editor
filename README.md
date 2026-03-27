@@ -129,6 +129,10 @@ editor_focus_mode/
 └── docs/               # Documentation
 ```
 
+### Architecture Guide
+
+For a code-level walkthrough of the runtime flow, hook registration, toggle behavior, and module responsibilities, see [`docs/architecture.md`](/Users/moritzvitt/src/addons/editor_focus_mode/docs/architecture.md).
+
 ### Contributing
 
 1. Fork the repository
