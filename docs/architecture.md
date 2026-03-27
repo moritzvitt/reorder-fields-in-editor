@@ -75,10 +75,6 @@ Main functions:
 
 - `register_browser_instance(browser)`
 - `current_browser()`
-- `browser_selected_note_ids(browser)`
-- `get_selected_notes(n)`
-- `refresh_browser_note(note)`
-- `refresh_other_editors(note)`
 
 For the current field-hiding feature, the most important function is `current_browser()`. The hiding code uses it to make sure it only acts on the Browser editor, not every editor Anki may open.
 
@@ -99,14 +95,6 @@ Main public functions:
 - `editor_will_load_note(js, note, editor)`
 - `toggle_field_visibility(editor)`
 - `editor_init_buttons(buttons, editor)`
-
-### [`flow.py`](/Users/moritzvitt/src/addons/editor_focus_mode/flow.py)
-
-This file tracks which field was most recently focused:
-
-- `on_editor_did_focus_field(note, field_idx)`
-
-At the moment, it is not connected in [`__init__.py`](/Users/moritzvitt/src/addons/editor_focus_mode/__init__.py), so it is currently dormant support code rather than part of the active runtime path.
 
 ## Startup Flow
 
@@ -336,8 +324,6 @@ Stored in Python module globals:
 
 - `_LAST_BROWSER` in [`browser_utils.py`](/Users/moritzvitt/src/addons/editor_focus_mode/browser_utils.py)
 - `_TOGGLE_BYPASS_UNTIL` in [`field_visibility.py`](/Users/moritzvitt/src/addons/editor_focus_mode/field_visibility.py)
-- `_ACTIVE_FIELD_CONTEXT` in [`flow.py`](/Users/moritzvitt/src/addons/editor_focus_mode/flow.py)
-
 ### 3. Editor DOM state
 
 Stored in the webview:
@@ -368,8 +354,6 @@ These are useful to know while reading the code:
 - The DOM-hiding logic is heuristic-based and depends on Anki HTML structure.
 - The reset path and hide path are not perfectly symmetric.
 - `_TOGGLE_BYPASS_UNTIL` is global, so timing issues can cross editor instances.
-- `flow.py` exists but is not currently hooked up.
-
 ## Suggested Reading Order for Learning the Code
 
 If your goal is understanding rather than changing it, this order usually feels best:
@@ -378,4 +362,3 @@ If your goal is understanding rather than changing it, this order usually feels 
 2. Read `apply_field_visibility()` and `toggle_field_visibility()` in [`field_visibility.py`](/Users/moritzvitt/src/addons/editor_focus_mode/field_visibility.py).
 3. Read the helpers in [`config.py`](/Users/moritzvitt/src/addons/editor_focus_mode/config.py).
 4. Read `_hide_fields_js()` and `_reset_fields_js()` last, because they are the lowest-level DOM details.
-

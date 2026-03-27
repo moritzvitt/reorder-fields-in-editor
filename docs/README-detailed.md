@@ -83,13 +83,6 @@ For troubleshooting, the add-on can generate debug information about field detec
 
 ## Planned Features
 
-- **ChatGPT Integration**: Generate content for specific fields using AI
-  - Single note processing
-  - Batch processing for multiple notes
-  - Configurable field mappings for Lemma, Subtitle, Question, and Grammar
-
-## Future Plans
-
 - **Layout Rotation Button**: Add a button that rotates through multiple predefined field layouts for the current note type
 - **Multiple Visibility Presets**: Allow one note type to define several subsets of visible fields instead of just one
 - **Faster Note Inspection**: Make it easier to switch between different editing contexts without opening the full field list every time

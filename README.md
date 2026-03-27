@@ -123,7 +123,6 @@ editor_focus_mode/
 ├── field_visibility.py  # Core visibility logic
 ├── ui.py               # Configuration dialog
 ├── browser_utils.py    # Browser integration utilities
-├── flow.py             # Editor flow tracking
 ├── manifest.json       # Anki addon manifest
 └── docs/               # Documentation
 ```
