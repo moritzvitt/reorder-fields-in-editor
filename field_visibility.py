@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import time
 
-from aqt.qt import QTimer
+from aqt.qt import QCursor, QMenu, QTimer
 from pathlib import Path
 
 from .browser_utils import current_browser
@@ -289,6 +289,10 @@ def toggle_field_visibility(editor) -> None:
 
 
 def cycle_field_layout(editor) -> None:
+    show_layout_menu(editor)
+
+
+def show_layout_menu(editor) -> None:
     note = getattr(editor, "note", None)
     if note is None:
         return
@@ -296,22 +300,71 @@ def cycle_field_layout(editor) -> None:
     if not note_type_name:
         return
     config = get_addon_config()
+    all_names = _all_field_names_from_note(note)
+    if ensure_note_type_defaults(config, note_type_name, all_names):
+        save_addon_config(config)
+        config = get_addon_config()
     layout_map = get_field_visibility_layouts(config)
     layouts = layout_map.get(note_type_name) or []
-    all_names = _all_field_names_from_note(note)
     if not layouts:
         layouts = default_layouts_from_field_names(all_names)
+
+    parent_widget = getattr(editor, "parentWindow", None) or current_browser() or editor
+    menu = QMenu(parent_widget)
+    menu.setToolTipsVisible(True)
+
+    if not layouts:
+        empty_action = menu.addAction("No layouts available")
+        empty_action.setEnabled(False)
+        menu.exec(QCursor.pos())
+        return
+
     active_layouts = get_field_visibility_active_layouts(config)
-    current_index = active_layouts.get(note_type_name, 0) % len(layouts)
-    active_layouts[note_type_name] = (current_index + 1) % len(layouts)
+    active_index = active_layouts.get(note_type_name, 0) % len(layouts)
+    for index, layout in enumerate(layouts):
+        action = menu.addAction(layout_name(layout, index))
+        action.setCheckable(True)
+        action.setChecked(index == active_index)
+        action.setToolTip(f"Use {layout_name(layout, index)} for {note_type_name}")
+        action.triggered.connect(
+            lambda _checked=False, nt=note_type_name, idx=index: select_field_layout(editor, nt, idx)
+        )
+
+    menu.exec(QCursor.pos())
+
+
+def select_field_layout(editor, note_type_name: str, layout_index: int) -> None:
+    note = getattr(editor, "note", None)
+    current_note_type = _note_type_name(note) if note is not None else None
+    current_field_names = _all_field_names_from_note(note) if note is not None else []
+
+    config = get_addon_config()
+    if current_note_type and note_type_name == current_note_type:
+        if ensure_note_type_defaults(config, note_type_name, current_field_names):
+            save_addon_config(config)
+            config = get_addon_config()
+
+    layout_map = get_field_visibility_layouts(config)
+    layouts = layout_map.get(note_type_name) or []
+    if not layouts and note_type_name == current_note_type:
+        layouts = default_layouts_from_field_names(current_field_names)
+    if not layouts:
+        return
+
+    active_layouts = get_field_visibility_active_layouts(config)
+    active_layouts[note_type_name] = max(0, min(layout_index, len(layouts) - 1))
     config[FIELD_VISIBILITY_ACTIVE_LAYOUTS] = active_layouts
     save_addon_config(config)
+
+    if note is None or note_type_name != current_note_type:
+        return
+
     if note_type_name in get_field_visibility_disabled(config):
-        _reset_visibility(editor, all_names)
+        _reset_visibility(editor, current_field_names)
     else:
-        _, _, allowed, _ = _current_layout_fields(note_type_name, config, all_names)
+        _, _, allowed, _ = _current_layout_fields(note_type_name, config, current_field_names)
         allowed_indices, field_count, _ = _allowed_field_indices(note, allowed)
-        js = _hide_fields_js(allowed_indices, field_count, all_names, allowed)
+        js = _hide_fields_js(allowed_indices, field_count, current_field_names, allowed)
         try:
             editor.web.eval(js)
         except Exception:
@@ -385,9 +438,9 @@ def editor_init_buttons(buttons: list[str], editor) -> None:
     buttons.append(toggle_button)
     layout_button = editor.addButton(
         icon=None,
-        cmd="prompt_addon_cycle_layout",
-        func=lambda ed: cycle_field_layout(ed),
-        tip="Rotate through the available layouts",
+        cmd="prompt_addon_show_layout_menu",
+        func=lambda ed: show_layout_menu(ed),
+        tip="Choose a layout from a dropdown grouped by note type",
         label="Layout",
         id="prompt-addon-cycle-layout",
         rightside=True,
