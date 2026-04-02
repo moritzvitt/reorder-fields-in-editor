@@ -288,6 +288,39 @@ def toggle_field_visibility(editor) -> None:
     QTimer.singleShot(300, lambda: _update_button_labels(editor))
 
 
+def cycle_field_layout(editor) -> None:
+    note = getattr(editor, "note", None)
+    if note is None:
+        return
+    note_type_name = _note_type_name(note)
+    if not note_type_name:
+        return
+    config = get_addon_config()
+    layout_map = get_field_visibility_layouts(config)
+    layouts = layout_map.get(note_type_name) or []
+    all_names = _all_field_names_from_note(note)
+    if not layouts:
+        layouts = default_layouts_from_field_names(all_names)
+    active_layouts = get_field_visibility_active_layouts(config)
+    current_index = active_layouts.get(note_type_name, 0) % len(layouts)
+    active_layouts[note_type_name] = (current_index + 1) % len(layouts)
+    config[FIELD_VISIBILITY_ACTIVE_LAYOUTS] = active_layouts
+    save_addon_config(config)
+    if note_type_name in get_field_visibility_disabled(config):
+        _reset_visibility(editor, all_names)
+    else:
+        _, _, allowed, _ = _current_layout_fields(note_type_name, config, all_names)
+        allowed_indices, field_count, _ = _allowed_field_indices(note, allowed)
+        js = _hide_fields_js(allowed_indices, field_count, all_names, allowed)
+        try:
+            editor.web.eval(js)
+        except Exception:
+            pass
+        QTimer.singleShot(150, lambda: editor.web.eval(js))
+        QTimer.singleShot(350, lambda: editor.web.eval(js))
+    QTimer.singleShot(100, lambda: _update_button_labels(editor))
+
+
 def configure_field_layout(editor) -> None:
     note = getattr(editor, "note", None)
     if note is None:
@@ -352,14 +385,24 @@ def editor_init_buttons(buttons: list[str], editor) -> None:
     buttons.append(toggle_button)
     layout_button = editor.addButton(
         icon=None,
-        cmd="prompt_addon_configure_layout",
-        func=lambda ed: configure_field_layout(ed),
-        tip="Configure hidden fields for the current layout",
+        cmd="prompt_addon_cycle_layout",
+        func=lambda ed: cycle_field_layout(ed),
+        tip="Rotate through the available layouts",
         label="Layout",
-        id="prompt-addon-configure-layout",
+        id="prompt-addon-cycle-layout",
         rightside=True,
     )
     buttons.append(layout_button)
+    configure_button = editor.addButton(
+        icon=None,
+        cmd="prompt_addon_configure_layout",
+        func=lambda ed: configure_field_layout(ed),
+        tip="Configure hidden fields for the current layout",
+        label="Configure Layout",
+        id="prompt-addon-configure-layout",
+        rightside=True,
+    )
+    buttons.append(configure_button)
     QTimer.singleShot(100, lambda: _update_button_labels(editor))
 
 
@@ -422,9 +465,9 @@ def _update_layout_button_label(editor) -> None:
     label = layout_name(active_layout, active_index)
     js = f"""
     (function() {{
-      const label = "{label}";
+        const label = "{label}";
       const apply = () => {{
-        const btn = document.getElementById("prompt-addon-configure-layout");
+        const btn = document.getElementById("prompt-addon-cycle-layout");
         if (btn) {{
           btn.textContent = label;
           return true;

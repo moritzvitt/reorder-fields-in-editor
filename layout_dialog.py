@@ -55,9 +55,11 @@ class LayoutDialog(QDialog):
         self.active_layout_checkbox = QCheckBox("Use this as the active layout")
         self.hidden_fields_list = QListWidget()
 
+        self._loading_layout = True
         self._build_ui()
         self._populate_layouts()
         self._load_layout(self.current_index)
+        self._loading_layout = False
 
     def result_payload(self) -> tuple[list[dict[str, object]], int]:
         return self.layouts, self.active_index
@@ -123,7 +125,6 @@ class LayoutDialog(QDialog):
     def _load_layout(self, index: int) -> None:
         if index < 0 or index >= len(self.layouts):
             return
-        self._loading_layout = True
         self.current_index = index
         layout = self.layouts[index]
         visible_fields = set(layout_visible_fields(layout, self.field_names))
@@ -139,7 +140,6 @@ class LayoutDialog(QDialog):
                 else Qt.CheckState.Unchecked
             )
             self.hidden_fields_list.addItem(item)
-        self._loading_layout = False
 
     def _store_current_layout(self) -> bool:
         if self.current_index < 0 or self.current_index >= len(self.layouts):
@@ -172,10 +172,12 @@ class LayoutDialog(QDialog):
             self.layout_list.setCurrentRow(self.current_index)
             self._loading_layout = False
             return
+        self._loading_layout = True
         current_item = self.layout_list.item(self.current_index)
         if current_item is not None:
             current_item.setText(layout_name(self.layouts[self.current_index], self.current_index))
         self._load_layout(index)
+        self._loading_layout = False
 
     def _add_layout(self) -> None:
         if not self._store_current_layout():
