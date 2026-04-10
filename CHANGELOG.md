@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- MkDocs configuration and a docs landing page for the shared add-on documentation site.
 - Added per-layout field ordering, so layouts can now both hide fields and rearrange the editor field order.
 
 ## 0.2.0 - 2026-03-27

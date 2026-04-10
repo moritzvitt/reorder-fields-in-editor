@@ -1,0 +1,9 @@
+site_name: Editor Focus Mode
+docs_dir: docs
+
+nav:
+  - Overview: index.md
+  - Detailed Guide: README-detailed.md
+  - Improvements: improvements.md
+  - Architecture: architecture/architecture.md
+  - User Flow: architecture/user-flow.md
