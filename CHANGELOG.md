@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 - Bundled a reusable `shared_menu.py` helper so this add-on can join the shared `Moritz Add-ons` menu without depending on a separate menu-point add-on.
 - Added per-layout field ordering, so layouts can now both hide fields and rearrange the editor field order.
 
+### Changed
+
+- Added a `Moritz Add-ons -> Editor Focus Mode` submenu with a quick usage guide and a shortcut to the built-in add-on config editor.
+
 ## 0.2.0 - 2026-03-27
 
 ### Added
